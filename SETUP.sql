@@ -417,6 +417,15 @@ CREATE TABLE IF NOT EXISTS co_applicants (
   CONSTRAINT co_applicants_app_id_unique UNIQUE (app_id)
 );
 
+-- is_admin(): returns true if the current user is in the admin_roles table.
+-- Defined here early because it is referenced by RLS policies throughout this script.
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM admin_roles WHERE user_id = auth.uid());
+END;
+$$;
+
 -- RLS: mirrors applications policies — admins see all, landlords see their properties' apps
 ALTER TABLE co_applicants ENABLE ROW LEVEL SECURITY;
 
@@ -618,14 +627,6 @@ CREATE TRIGGER saves_count_trigger
 -- ============================================================
 -- 11. HELPER FUNCTIONS
 -- ============================================================
-
--- is_admin(): used in all admin RLS policies
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER AS $$
-BEGIN
-  RETURN EXISTS (SELECT 1 FROM admin_roles WHERE user_id = auth.uid());
-END;
-$$;
 
 -- generate_app_id(): creates CP-YYYYMMDD-XXXXXXNNN application IDs
 CREATE OR REPLACE FUNCTION generate_app_id()

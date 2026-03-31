@@ -21,6 +21,10 @@ Save it somewhere safe. You'll paste it in two places — both must match exactl
 
 > **What `SETUP.sql` includes:** full schema, all RLS policies, all database functions, all triggers, all indexes, all storage bucket definitions, and all table-level grants for `anon` and `authenticated` roles. Everything is in one file.
 
+> **Optional — Enable pg_cron for automatic rate-limit log cleanup:**
+> Supabase → **Database → Extensions** → search **pg_cron** → enable it.
+> When enabled, `SETUP.sql` automatically registers a job that purges `rate_limit_log` entries older than 1 hour, running every 30 minutes. Without it the table still works correctly — rows accumulate but queries remain fast via an index. You can enable pg_cron any time (before or after running `SETUP.sql`) and re-run the script to register the cleanup job.
+
 **Save these from Supabase → Project Settings → API:**
 - Project URL (looks like `https://xxxx.supabase.co`)
 - Anon public key (the `eyJ...` key labelled "anon public")

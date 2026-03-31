@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 Every task, fix, or update must add an entry. Most recent changes appear first.
 
 
+## [2026-03-31] — Session 025: SETUP.sql Audit & Database Hardening
+
+**Session type:** Bug fixes — resolved 5 SQL compatibility errors blocking fresh-install execution of `SETUP.sql`. Script now runs cleanly on any Supabase project from a blank slate.
+
+### Fixes
+- **SETUP.sql — `ADD CONSTRAINT IF NOT EXISTS` invalid syntax:** PostgreSQL does not support `IF NOT EXISTS` on `ADD CONSTRAINT`. Six instances replaced with `DO $$ ... END $$` blocks that check `pg_constraint` before adding each constraint. Fully idempotent on re-run.
+- **SETUP.sql — `is_admin()` undefined at policy creation:** RLS policies referencing `is_admin()` appeared before the function definition. Function moved to line 422, above its first use at line 433.
+- **SETUP.sql — Co-applicant migration fails on fresh install:** A data migration `INSERT INTO co_applicants` referenced columns (`co_applicant_first_name`, etc.) that only exist after a prior schema migration, causing an error on fresh installs. Wrapped in a `DO` block that checks for column existence first — skips silently on fresh installs, executes correctly on upgrades.
+- **SETUP.sql — `GENERATED ALWAYS AS` immutability error:** Full-text search generated columns used `array_to_string` (not immutable) and a bare string literal `'english'` (not recognised as `regconfig` in this context). Fixed by: adding a new `IMMUTABLE` wrapper function `immutable_array_to_text()`, casting `'english'` to `'english'::regconfig`, and casting `'{}'` to `'{}'::text[]`. Resolves `ERROR: generation expression is not immutable`.
+- **SETUP.sql — `schema "cron" does not exist`:** `SELECT cron.schedule(...)` had a `WHERE EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron')` guard, but PostgreSQL parses the full statement before evaluating `WHERE` — so the schema reference fails at parse time when pg_cron is not installed. Replaced with a `DO $outer$ ... END $outer$` block that checks for the extension at runtime using `IF EXISTS` before calling `PERFORM cron.schedule(...)`. SETUP.sql now runs on any Supabase project regardless of whether pg_cron is enabled.
+
+
 ## [2026-03-30] — Session 024 Part 2: Security, Performance & SEO Audit (Complete)
 
 **Session type:** Audit + Fixes — remaining 6 issues from Session 024 audit resolved.

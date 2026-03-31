@@ -104,13 +104,20 @@ These functions are NOT part of this repository's local runtime. They run on Den
 | `properties` | Rental listings |
 | `landlords` | Landlord profiles |
 | `applications` | Tenant applications (SSN masked to last-4) |
+| `co_applicants` | Co-applicant data linked to applications |
 | `messages` | Application thread messages |
 | `inquiries` | Property inquiry submissions |
 | `email_logs` | All email send attempts with status |
 | `admin_roles` | Admin user registry |
+| `admin_actions` | Admin audit trail — records every admin action with actor and timestamp |
 | `saved_properties` | Tenant saved listings |
+| `rate_limit_log` | DB-backed rate limiting — stores IP, endpoint, and timestamp |
 
 Row Level Security (RLS) is enabled on all tables. The complete schema, RLS policies, triggers, indexes, and **table-level grants** are all in `SETUP.sql` — one file, one run.
+
+**Key helper database functions:**
+- `is_admin()` — returns `true` if the current session's user exists in `admin_roles`. Used in RLS policies across all tables.
+- `immutable_array_to_text(arr text[], sep text)` — `IMMUTABLE` wrapper around `array_to_string`. Required for use in generated column expressions (PostgreSQL requires all functions in generated columns to be immutable).
 
 > **Important:** RLS policies alone are not enough. PostgreSQL requires both a table-level `GRANT` (giving the role permission to touch the table at all) AND an RLS policy (determining which rows that role can see). Without the grants, all queries return `permission denied` even when valid RLS policies exist. `SETUP.sql` includes both. If you ever see `permission denied for table X`, run the grant block in `SETUP.sql` section 14 manually in the SQL Editor.
 

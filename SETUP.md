@@ -129,9 +129,9 @@ From now on: every push to `main` → Cloudflare Pages auto-redeploys the fronte
 ```
 npx supabase login
 ```
-3. Deploy all functions (replace `YOUR_PROJECT_REF` with your Reference ID from Supabase → Project Settings → General):
+3. Deploy all functions:
 ```
-npx supabase functions deploy --project-ref YOUR_PROJECT_REF
+npx supabase functions deploy --project-ref cfsdhylbwzyuvcvbnrel
 ```
 4. Go to **Supabase → Edge Functions** — you should see all functions listed and active
 

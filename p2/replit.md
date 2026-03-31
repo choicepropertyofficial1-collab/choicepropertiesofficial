@@ -1,6 +1,39 @@
 # Choice Properties — Developer Reference
 
-> **For AI agents:** Read `.agents/instructions.md` FIRST before any action. That file contains the mandatory pre-edit protocol and absolute prohibitions. This file is a reference companion only.
+---
+
+## ⛔ MANDATORY — AI AGENTS READ THIS FIRST
+
+**This file is loaded automatically into every Replit Agent session.**
+
+This project is a **pure static website**. It has no server, no local runtime, and no database in this repository.
+
+### The ONLY valid workflow:
+```
+Edit files in Replit → Push to GitHub → Cloudflare Pages auto-deploys → Live site
+```
+
+### You are PROHIBITED from:
+
+| Action | Why |
+|---|---|
+| `npm install` | Zero runtime dependencies exist. The `preinstall` hook will exit with an error. |
+| `npm start` or any server command | No server exists. The `start` script will exit with an error. |
+| Creating `config.js` | Generated at Cloudflare build time ONLY. Committing it leaks credentials and breaks deployment. It is gitignored. |
+| Using `DATABASE_URL`, `PGHOST`, `PGPASSWORD`, etc. | Replit injects these automatically. They are ghost variables. Ignore them completely. |
+| Installing any ORM (Drizzle, Prisma, Sequelize) | Backend is Supabase cloud. No local database. No migrations. |
+| Running `db:push`, `db:migrate` | Same reason. |
+| Running `wrangler` or any Cloudflare CLI | Deployment is automatic via GitHub push. |
+| Running `git push` or `git commit` | Owner handles all git operations. |
+| Modifying `generate-config.js`, `_headers`, `SETUP.sql`, `js/cp-api.js`, `js/apply*.js` | Protected files. Owner approval required. |
+| Configuring workflows, dev servers, or preview servers | This is a static site. Nothing runs locally. |
+
+### You ARE allowed to:
+- Edit `.html`, `.css`, and `.js` files in the frontend
+- Edit Supabase Edge Functions in `supabase/functions/` (Deno TypeScript)
+- Read any file in the project
+
+**Full rule set:** `.agents/instructions.md`
 
 ---
 
@@ -16,25 +49,6 @@
 | Images | ImageKit CDN |
 | Hosting | Cloudflare Pages (auto-deploys on GitHub push) |
 | Editor | Replit (code editor only — not a deployment target) |
-
-**Deployment workflow:**
-1. Edit static files (HTML / CSS / JS) in Replit
-2. Owner pushes to GitHub
-3. Cloudflare Pages auto-deploys
-4. Live site updates
-
-Your job ends at step 1. You do not deploy, preview, or push.
-
----
-
-## Absolute Prohibitions (short version)
-
-Full list in `.agents/instructions.md`. Never:
-- Use `DATABASE_URL`, `PGHOST`, `PGPASSWORD`, `PGUSER`, `PGDATABASE`, `PGPORT`
-- Install pg, Drizzle, Prisma, Sequelize, or any ORM
-- Run `db:push`, `db:migrate`, or any database command
-- Create `server.js`, `api/` routes, or any backend files
-- Run `wrangler`, `git push`, or `git commit`
 
 ---
 
@@ -104,15 +118,6 @@ All styles split by concern, loaded in this order on every page:
 | `css/landlord.css` | Landlord portal | v16 |
 
 **Cache-busting rule:** Cache busting is now **automated**. HTML files use `?v=__BUILD_VERSION__` tokens that `generate-config.js` replaces with `Date.now()` at every Cloudflare Pages build. Do NOT manually edit `?v=` strings — they will be overwritten on the next deploy. Do NOT replace `__BUILD_VERSION__` with a hardcoded number.
-
----
-
-## Property Gallery System
-
-- **Mosaic layout**: 3:2 grid (hero + 2×2 side panels) with LQIP blur-up
-- **Mobile**: single-column carousel with velocity-aware swipe, dot indicators
-- **Lightbox**: fullscreen, keyboard nav, thumbnail filmstrip, focus trap
-- **Accessibility**: `aria-modal`, `aria-live` counter, focus restoration on close
 
 ---
 

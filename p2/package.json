@@ -4,8 +4,9 @@
   "private": true,
   "description": "Static site. Deployed via Cloudflare Pages (GitHub push triggers auto-deploy). No local server. No backend. Backend = Supabase cloud.",
   "scripts": {
+    "preinstall": "node -e \"console.error('\\n⛔ STOP: npm install is not allowed on this project.\\n   This is a static site with zero runtime dependencies.\\n   There is nothing to install. Do not run npm install.\\n   Read: p2/.agents/instructions.md\\n   Deploy path: edit files → push to GitHub → Cloudflare Pages auto-deploys.\\n'); process.exit(1)\"",
     "build": "node generate-config.js",
-    "start": "node -e \"console.error('\\nERROR: This project does not run locally.\\nThe only deployment path is: edit files → push to GitHub → Cloudflare Pages auto-deploys.\\nDo not configure a local server, workflow, or preview in Replit.\\n'); process.exit(1)\""
+    "start": "node -e \"console.error('\\n⛔ STOP: This project does not run locally.\\n   There is no server to start. This is a static site.\\n   Deploy path: edit files → push to GitHub → Cloudflare Pages auto-deploys.\\n   Read: p2/.agents/instructions.md\\n'); process.exit(1)\""
   },
   "engines": {
     "node": ">=18"

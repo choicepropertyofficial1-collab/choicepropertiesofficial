@@ -1660,14 +1660,14 @@ ALTER TABLE properties DROP COLUMN IF EXISTS search_tsv;
 ALTER TABLE properties
   ADD COLUMN search_tsv tsvector
   GENERATED ALWAYS AS (
-    to_tsvector('english',
+    to_tsvector('english'::regconfig,
       coalesce(title,         '') || ' ' ||
       coalesce(city,          '') || ' ' ||
       coalesce(state,         '') || ' ' ||
       coalesce(address,       '') || ' ' ||
       coalesce(description,   '') || ' ' ||
       coalesce(property_type, '') || ' ' ||
-      array_to_string(coalesce(amenities, '{}'), ' ')
+      array_to_string(coalesce(amenities, '{}'::text[]), ' ')
     )
   ) STORED;
 

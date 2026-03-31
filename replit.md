@@ -80,6 +80,7 @@ Edit files in Replit → Push to GitHub → Cloudflare Pages auto-deploys → Li
 | `DASHBOARD_URL` | Public site root URL — used in lease signing links |
 | `ADMIN_EMAIL` | Admin notification email from process-application |
 | `FRONTEND_ORIGIN` | Exact site origin (no trailing slash) for CORS |
+| `IMAGEKIT_URL_ENDPOINT` | ImageKit URL endpoint (e.g. `https://ik.imagekit.io/yourID`) |
 
 **Note:** `DASHBOARD_URL` and `ADMIN_EMAIL` are Supabase secrets (server-side).
 `ADMIN_EMAILS` (plural) is a Cloudflare Pages env var (UI display only — not security).

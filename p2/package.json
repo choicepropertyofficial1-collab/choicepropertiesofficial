@@ -1,0 +1,13 @@
+{
+  "name": "choice-properties",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static site. Deployed via Cloudflare Pages (GitHub push triggers auto-deploy). No local server. No backend. Backend = Supabase cloud.",
+  "scripts": {
+    "build": "node generate-config.js",
+    "start": "node -e \"console.error('\\nERROR: This project does not run locally.\\nThe only deployment path is: edit files → push to GitHub → Cloudflare Pages auto-deploys.\\nDo not configure a local server, workflow, or preview in Replit.\\n'); process.exit(1)\""
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

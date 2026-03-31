@@ -1724,11 +1724,20 @@ ALTER TABLE email_logs ADD COLUMN IF NOT EXISTS provider TEXT;
 -- causes wrong photos to be permanently deleted from ImageKit.
 -- Pre-check: verify no rows currently violate this before adding.
 -- ============================================================
-ALTER TABLE properties ADD CONSTRAINT IF NOT EXISTS photo_arrays_parity
-  CHECK (
-    photo_urls IS NULL OR photo_file_ids IS NULL OR
-    array_length(photo_urls, 1) IS NOT DISTINCT FROM array_length(photo_file_ids, 1)
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'photo_arrays_parity'
+    AND conrelid = 'properties'::regclass
+  ) THEN
+    ALTER TABLE properties ADD CONSTRAINT photo_arrays_parity
+      CHECK (
+        photo_urls IS NULL OR photo_file_ids IS NULL OR
+        array_length(photo_urls, 1) IS NOT DISTINCT FROM array_length(photo_file_ids, 1)
+      );
+  END IF;
+END $$;
 
 
 -- ============================================================
@@ -1766,21 +1775,52 @@ SELECT cron.schedule(
 -- HTML maxlength attributes exist but can be bypassed via direct API calls.
 -- char_length() counts Unicode characters; length() counts bytes — use char_length().
 -- ============================================================
-ALTER TABLE properties
-  ADD CONSTRAINT IF NOT EXISTS chk_description_len
-    CHECK (description        IS NULL OR char_length(description)         <= 5000),
-  ADD CONSTRAINT IF NOT EXISTS chk_title_len
-    CHECK (title              IS NULL OR char_length(title)               <= 200),
-  ADD CONSTRAINT IF NOT EXISTS chk_showing_instructions_len
-    CHECK (showing_instructions IS NULL OR char_length(showing_instructions) <= 2000);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'chk_description_len' AND conrelid = 'properties'::regclass
+  ) THEN
+    ALTER TABLE properties ADD CONSTRAINT chk_description_len
+      CHECK (description IS NULL OR char_length(description) <= 5000);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'chk_title_len' AND conrelid = 'properties'::regclass
+  ) THEN
+    ALTER TABLE properties ADD CONSTRAINT chk_title_len
+      CHECK (title IS NULL OR char_length(title) <= 200);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'chk_showing_instructions_len' AND conrelid = 'properties'::regclass
+  ) THEN
+    ALTER TABLE properties ADD CONSTRAINT chk_showing_instructions_len
+      CHECK (showing_instructions IS NULL OR char_length(showing_instructions) <= 2000);
+  END IF;
+END $$;
 
-ALTER TABLE inquiries
-  ADD CONSTRAINT IF NOT EXISTS chk_message_len
-    CHECK (message IS NULL OR char_length(message) <= 4000);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'chk_message_len' AND conrelid = 'inquiries'::regclass
+  ) THEN
+    ALTER TABLE inquiries ADD CONSTRAINT chk_message_len
+      CHECK (message IS NULL OR char_length(message) <= 4000);
+  END IF;
+END $$;
 
-ALTER TABLE applications
-  ADD CONSTRAINT IF NOT EXISTS chk_admin_notes_len
-    CHECK (admin_notes IS NULL OR char_length(admin_notes) <= 5000);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'chk_admin_notes_len' AND conrelid = 'applications'::regclass
+  ) THEN
+    ALTER TABLE applications ADD CONSTRAINT chk_admin_notes_len
+      CHECK (admin_notes IS NULL OR char_length(admin_notes) <= 5000);
+  END IF;
+END $$;
 
 
 -- ============================================================

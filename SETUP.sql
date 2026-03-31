@@ -1655,6 +1655,14 @@ CREATE INDEX IF NOT EXISTS idx_properties_status_avail
 -- Requires DROP + re-ADD because ALTER COLUMN ... SET EXPRESSION is
 -- Postgres 16+ only and Supabase runs Postgres 15.
 
+-- array_to_string is STABLE in PostgreSQL, not IMMUTABLE.
+-- Generated columns require every function to be IMMUTABLE.
+-- This wrapper is safe: the function depends only on its inputs.
+CREATE OR REPLACE FUNCTION immutable_array_to_text(arr text[], sep text)
+RETURNS text LANGUAGE sql IMMUTABLE AS $$
+  SELECT array_to_string(arr, sep)
+$$;
+
 ALTER TABLE properties DROP COLUMN IF EXISTS search_tsv;
 
 ALTER TABLE properties
@@ -1667,7 +1675,7 @@ ALTER TABLE properties
       coalesce(address,       '') || ' ' ||
       coalesce(description,   '') || ' ' ||
       coalesce(property_type, '') || ' ' ||
-      array_to_string(coalesce(amenities, '{}'::text[]), ' ')
+      immutable_array_to_text(coalesce(amenities, '{}'::text[]), ' ')
     )
   ) STORED;
 

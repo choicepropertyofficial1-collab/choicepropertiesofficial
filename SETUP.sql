@@ -453,31 +453,41 @@ CREATE POLICY "co_applicants_applicant_read" ON co_applicants
 
 -- ── Data migration: backfill from existing applications rows ──────────
 -- Safe to re-run: ON CONFLICT (app_id) DO NOTHING skips existing rows.
-INSERT INTO co_applicants (
-  app_id,
-  first_name, last_name, email, phone, dob, ssn, role,
-  employer, job_title, monthly_income, employment_duration, employment_status,
-  consent
-)
-SELECT
-  app_id,
-  co_applicant_first_name,
-  co_applicant_last_name,
-  co_applicant_email,
-  co_applicant_phone,
-  co_applicant_dob,
-  co_applicant_ssn,
-  additional_person_role,
-  co_applicant_employer,
-  co_applicant_job_title,
-  co_applicant_monthly_income,
-  co_applicant_employment_duration,
-  co_applicant_employment_status,
-  co_applicant_consent
-FROM applications
-WHERE has_co_applicant = true
-  AND co_applicant_email IS NOT NULL
-ON CONFLICT (app_id) DO NOTHING;
+-- Fresh installs: skipped automatically — old co_applicant_* columns never existed.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'applications'
+    AND column_name = 'co_applicant_first_name'
+  ) THEN
+    INSERT INTO co_applicants (
+      app_id,
+      first_name, last_name, email, phone, dob, ssn, role,
+      employer, job_title, monthly_income, employment_duration, employment_status,
+      consent
+    )
+    SELECT
+      app_id,
+      co_applicant_first_name,
+      co_applicant_last_name,
+      co_applicant_email,
+      co_applicant_phone,
+      co_applicant_dob,
+      co_applicant_ssn,
+      additional_person_role,
+      co_applicant_employer,
+      co_applicant_job_title,
+      co_applicant_monthly_income,
+      co_applicant_employment_duration,
+      co_applicant_employment_status,
+      co_applicant_consent
+    FROM applications
+    WHERE has_co_applicant = true
+      AND co_applicant_email IS NOT NULL
+    ON CONFLICT (app_id) DO NOTHING;
+  END IF;
+END $$;
 
 -- ── Drop migrated columns from applications ────────────────────────
 -- Only runs if the column still exists (safe for fresh installs where

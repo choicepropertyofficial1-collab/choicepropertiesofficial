@@ -1,0 +1,19 @@
+# CRITICAL: config.js is generated at Cloudflare build time ONLY.
+# It must NEVER be committed. Committing it will leak credentials and break deployment.
+config.js
+
+# Local environment files — secrets belong in Supabase and GAS dashboards, not here
+.env
+.env.*
+*.env
+
+# Dependencies — this project has no runtime npm packages
+node_modules/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/settings.json

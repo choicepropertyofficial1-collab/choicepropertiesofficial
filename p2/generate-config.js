@@ -221,6 +221,19 @@ if (config.SITE_URL) {
 // BUILD_VERSION is a timestamp set once per build. Every deploy automatically
 // produces unique ?v= strings, so browsers always fetch the latest CSS/JS files
 // even when _headers sets Cache-Control: immutable on /css/* and /js/*.
+const htmlFiles = (function walk(dir) {
+  const results = [];
+  fs.readdirSync(dir).forEach(function(name) {
+    const full = dir + '/' + name;
+    if (fs.statSync(full).isDirectory()) {
+      results.push.apply(results, walk(full));
+    } else if (name.endsWith('.html')) {
+      results.push(full);
+    }
+  });
+  return results;
+})('.');
+
 const BUILD_VERSION = Date.now().toString();
 
 htmlFiles.forEach(function(file) {
@@ -234,19 +247,6 @@ console.log('✅ Cache-bust token replaced in HTML files (BUILD_VERSION: ' + BUI
 
 const crypto = require('crypto');
 const nonce = crypto.randomBytes(16).toString('base64');
-
-const htmlFiles = (function walk(dir) {
-  const results = [];
-  fs.readdirSync(dir).forEach(function(name) {
-    const full = dir + '/' + name;
-    if (fs.statSync(full).isDirectory()) {
-      results.push.apply(results, walk(full));
-    } else if (name.endsWith('.html')) {
-      results.push(full);
-    }
-  });
-  return results;
-})('.');
 
 let nonceInjected = 0;
 htmlFiles.forEach(function(file) {

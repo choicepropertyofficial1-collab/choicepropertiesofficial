@@ -84,14 +84,27 @@ await (async function validateSupabaseCredentials() {
         headers:  { apikey: config.SUPABASE_ANON_KEY },
         timeout:  8000,
       }, function(res) {
-        if (res.statusCode === 200 || res.statusCode === 401) {
-          if (res.statusCode === 401) {
+        if (res.statusCode === 200) {
+          console.log('✅ Supabase credentials validated (HTTP 200)');
+          resolve();
+        } else if (res.statusCode === 401) {
+          // Read body to distinguish "valid key, schema restricted" from "invalid key"
+          let body = '';
+          res.on('data', function(chunk) { body += chunk; });
+          res.on('end', function() {
+            try {
+              const parsed = JSON.parse(body);
+              if (parsed.message && parsed.message.includes('Access to schema is forbidden')) {
+                // Key is valid — project restricts schema listing to service_role only
+                console.log('✅ Supabase credentials validated (schema-restricted project, key accepted)');
+                resolve();
+                return;
+              }
+            } catch (e) { /* ignore JSON parse errors */ }
             console.error('❌ Supabase credential check failed: URL is reachable but SUPABASE_ANON_KEY is invalid (HTTP 401).');
             console.error('   Double-check the anon key in your hosting platform environment variables.');
             process.exit(1);
-          }
-          console.log('✅ Supabase credentials validated (HTTP ' + res.statusCode + ')');
-          resolve();
+          });
         } else {
           console.error('❌ Supabase credential check failed: unexpected HTTP ' + res.statusCode + ' from ' + testUrl);
           console.error('   Check that SUPABASE_URL is correct and the project is not paused.');

@@ -4,6 +4,23 @@ All notable changes to this project are documented here.
 Every task, fix, or update must add an entry. Most recent changes appear first.
 
 
+## [2026-03-31] — Session 026: Cloudflare Pages Deployment Setup & Build Fix
+
+**Session type:** Infrastructure — full Cloudflare Pages deployment pipeline configured end-to-end.
+
+### Infrastructure
+- **Supabase project linked:** `supabase/config.toml` updated with `project_id = "cfsdhylbwzyuvcvbnrel"`. All 11 edge functions deployed (`generate-lease`, `get-application-status`, `imagekit-delete`, `imagekit-upload`, `mark-movein`, `mark-paid`, `process-application`, `send-inquiry`, `send-message`, `sign-lease`, `update-status`).
+- **Supabase secrets set:** `GAS_EMAIL_URL`, `GAS_RELAY_SECRET`, `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_URL_ENDPOINT`, `ADMIN_EMAIL`, `DASHBOARD_URL`, `FRONTEND_ORIGIN` all configured in Supabase Edge Function secrets.
+- **Cloudflare Pages configured:** Build command set to `node generate-config.js`. All required environment variables set for both production and preview environments (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `IMAGEKIT_URL`, `IMAGEKIT_PUBLIC_KEY`, `SITE_URL`, `GEOAPIFY_API_KEY`, `COMPANY_EMAIL`, `COMPANY_PHONE`, `COMPANY_ADDRESS`). `SKIP_DEPENDENCY_INSTALL=true` added to bypass intentional npm preinstall block on static site.
+
+### Fixes
+- **`generate-config.js` — Supabase credential validator false-positive on schema-restricted projects:** The build-time credential check tested `GET /rest/v1/` and treated any `401` as an invalid key. Supabase projects with schema listing restricted to `service_role` return `401 Access to schema is forbidden` even for valid anon keys. Fixed by reading the response body on 401 and distinguishing "schema restricted" (valid key, passes build) from "truly invalid key" (fails build).
+
+### Documentation
+- `SETUP.md` and `ARCHITECTURE.md` updated with real project ref (`cfsdhylbwzyuvcvbnrel`) replacing `YOUR_PROJECT_REF` placeholder.
+- `replit.md` updated: `IMAGEKIT_URL_ENDPOINT` added to the Supabase secrets table.
+
+
 ## [2026-03-31] — Session 025: SETUP.sql Audit & Database Hardening
 
 **Session type:** Bug fixes — resolved 5 SQL compatibility errors blocking fresh-install execution of `SETUP.sql`. Script now runs cleanly on any Supabase project from a blank slate.

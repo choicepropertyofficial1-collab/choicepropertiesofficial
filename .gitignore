@@ -17,3 +17,7 @@ Thumbs.db
 *.swo
 .idea/
 .vscode/settings.json
+
+# Replit system folders — environment-specific, not part of the project
+.cache/
+.local/

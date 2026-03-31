@@ -31,7 +31,18 @@ async function compressImage(file, maxPx = 2048, quality = 0.85) {
   try {
     bmp = await createImageBitmap(file);
   } catch {
-    // createImageBitmap failed (unsupported format) — fall back to raw file
+    // I-063: createImageBitmap failed (unsupported format or memory pressure).
+    // Guard against sending a raw file that's too large — base64 adds ~33% overhead,
+    // so anything over ~4.5 MB will exceed the Supabase 6 MB body limit and return
+    // a silent HTTP 413. Cap at 4 MB to stay safely under.
+    const MAX_RAW_BYTES = 4 * 1024 * 1024;
+    if (file.size > MAX_RAW_BYTES) {
+      throw new Error(
+        `"${file.name}" could not be compressed and is too large to upload uncompressed ` +
+        `(${(file.size / 1024 / 1024).toFixed(1)} MB). ` +
+        `Please reduce the photo size or use a different image.`
+      );
+    }
     return file;
   }
   const scale   = Math.min(1, maxPx / Math.max(bmp.width, bmp.height));
@@ -142,8 +153,12 @@ export async function uploadToImageKit(file, options = {}) {
     };
 
     xhr.onerror   = () => reject(new Error('Network error — check your connection and try again.'));
+    // I-066: Supabase Edge Functions hard-terminate at 60 seconds.
+    // Setting timeout > 60 s means it never fires — instead the connection is
+    // reset by Supabase, which triggers onerror with "Network error", giving the
+    // user a misleading message. 55 s fires cleanly before Supabase cuts the wire.
     xhr.ontimeout = () => reject(new Error('Upload timed out — your connection may be slow. Please try again.'));
-    xhr.timeout   = 120_000; // 2 minutes max per photo
+    xhr.timeout   = 55_000; // 55 s — must be under the 60 s Supabase Edge Function limit
 
     xhr.open('POST', `${supabaseUrl}/functions/v1/imagekit-upload`);
     xhr.setRequestHeader('apikey',        anonKey);

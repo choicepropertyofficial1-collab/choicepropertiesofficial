@@ -4,9 +4,27 @@
 // ============================================================
 
 // Supabase client (lazy singleton)
+// I-065: Guard against the defer/module race condition.
+// config.js and supabase.min.js are loaded with `defer`. ES modules also defer,
+// but the spec does not guarantee defer-script order relative to module execution
+// across all browsers (particularly mobile Safari and older WebViews). If sb() is
+// called before window.supabase or CONFIG is ready, we throw a clear error instead
+// of a cryptic "Cannot read properties of undefined" that silently kills uploads.
 let _sb = null;
 function sb() {
   if (!_sb) {
+    if (!window.supabase) {
+      throw new Error(
+        'Supabase SDK not loaded yet. ' +
+        'Ensure supabase.min.js defer script runs before cp-api.js.'
+      );
+    }
+    if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL) {
+      throw new Error(
+        'CONFIG not ready. ' +
+        'Ensure config.js defer script runs before cp-api.js.'
+      );
+    }
     _sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
       auth: { persistSession: true, autoRefreshToken: true }
     });
@@ -40,10 +58,15 @@ const Auth = {
     // Always force-refresh to avoid returning an expired cached access_token.
     // getSession() can return a stale token on slow connections when auto-refresh timed out.
     let token = null;
+    let refreshFailed = false;
     try {
-      const { data: rd } = await sb().auth.refreshSession();
+      const { data: rd, error: re } = await sb().auth.refreshSession();
       token = rd?.session?.access_token ?? null;
-    } catch { /* network failure — fall through */ }
+      // I-064: Distinguish network failure from auth failure.
+      // refreshSession() throws on network error but returns { error } on auth error.
+      // Only flag as auth failure when the server actually rejected the token.
+      if (!token && re) refreshFailed = true;
+    } catch { /* network failure — fall through to cached session */ }
 
     // Fall back to cached session if refresh failed (e.g. no network at all)
     if (!token) {
@@ -54,7 +77,12 @@ const Auth = {
     }
 
     if (!token) {
-      await sb().auth.signOut().catch(() => {}); // clear any stale local state
+      // I-064: Only sign out if we have confirmed the token is auth-rejected,
+      // not just because the network was slow or offline. Signing out on a
+      // network hiccup during upload destroys the session and loses form state.
+      if (refreshFailed) {
+        await sb().auth.signOut().catch(() => {}); // clear confirmed-invalid session
+      }
       return null;
     }
 

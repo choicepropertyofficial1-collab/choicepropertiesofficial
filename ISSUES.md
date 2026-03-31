@@ -8,9 +8,9 @@
 
 ---
 
-## 🟢 Active Issues — Session 024 Complete
+## 🟢 Active Issues — Session 027 Complete
 
-**No open issues.** All 11 issues from the Session 024 audit (I-051–I-061) have been resolved.
+**No open issues.** All 6 issues from the Session 027 photo upload audit (I-062–I-067) have been resolved.
 
 ---
 
@@ -19,15 +19,15 @@
 |---|---|
 | OPEN | 0 |
 | IN PROGRESS | 0 |
-| RESOLVED | 61 |
+| RESOLVED | 67 |
 | DEFERRED | 0 |
 | WONT FIX | 1 |
-| **Total** | **63** |
+| **Total** | **69** |
 
-*Last updated: Session 024 — 2026-03-30 (all 11 issues I-051–I-061 resolved)*
+*Last updated: Session 027 — 2026-03-31 (all 6 issues I-062–I-067 resolved)*
 
 ### Open Issues by Priority
-*No open issues. All 63 tracked issues resolved or won't-fixed as of Session 024.*
+*No open issues. All 69 tracked issues resolved or won't-fixed as of Session 027.*
 
 **Won't Fix (owner decision):**
 | DF-002 | — | No admin workflow to verify fee payment before review — WONT FIX (intentional offline payment process) |
@@ -753,6 +753,61 @@
 | I-050f | 🟡 | File size badge on thumbnails — immediate feedback at selection not submit | ✅ RESOLVED |
 | I-050g | 🟠 | Preview blob URL fix — data URLs used instead of blob: URLs (iOS Safari cross-tab) | ✅ RESOLVED |
 | I-050h | 🟡 | Dropzone hint text — formats listed, iPhone HEIC guidance added inline | ✅ RESOLVED |
+
+---
+
+## Session 027 — Photo Upload Deep Audit
+
+### I-062 · ImageKit receives data URI instead of raw base64 — every upload fails
+- **Priority:** 🔴 CRITICAL
+- **Area:** Edge Functions / `supabase/functions/imagekit-upload/index.ts`
+- **Status:** ✅ RESOLVED
+- **Root cause:** `fileToBase64()` in `imagekit.js` returns a full data URI (`data:image/jpeg;base64,/9j/...`). The Edge Function was forwarding this string directly to ImageKit's upload API as the `file` FormData field. ImageKit's API expects **raw base64 only** — the `data:...;base64,` prefix causes it to treat the value as a URL to fetch (which fails) or reject the payload entirely. This silently broke every single photo upload regardless of whether env vars were correctly set.
+- **Fix:** Added a one-line strip in the Edge Function before building FormData: `const base64Raw = fileData.includes(',') ? fileData.split(',')[1] : fileData`. Applied before `formData.append('file', ...)`.
+
+---
+
+### I-063 · `compressImage()` falls back to raw file silently — large files hit body cap with no error
+- **Priority:** 🔴 CRITICAL
+- **Area:** Client / `js/imagekit.js`
+- **Status:** ✅ RESOLVED
+- **Root cause:** When `createImageBitmap()` fails (older iOS, memory pressure, some PNG variants), `compressImage()` silently returned the original uncompressed file. A 10 MB iPhone photo then gets base64-encoded (+33% = ~13 MB payload), exceeding either the Supabase 6 MB body limit or the Edge Function's 20 MB cap. The error surfaced as a generic network failure with no hint about file size.
+- **Fix:** Added a 4 MB size gate in the `catch` block. If the raw file exceeds 4 MB and cannot be compressed, a clear user-facing error is thrown: `"${file.name}" could not be compressed and is too large to upload uncompressed (X.X MB). Please reduce the photo size or use a different image.`
+
+---
+
+### I-064 · `getAccessToken()` signs user out on network failure — loses session and form state
+- **Priority:** 🟠 HIGH
+- **Area:** Client / `js/cp-api.js`
+- **Status:** ✅ RESOLVED
+- **Root cause:** `refreshSession()` can throw on network error OR return `{ error }` on auth rejection. The original code treated both the same: if no token was obtained for any reason, it called `auth.signOut()`. On a slow mobile connection where `refreshSession()` timed out (not an auth failure), this signed the landlord out mid-upload, destroyed their session, and redirected them to login — losing the filled form.
+- **Fix:** Introduced a `refreshFailed` flag set only when the server actually returns an auth error (not when the call throws). `signOut()` is now only called when `refreshFailed === true`, never on a network throw.
+
+---
+
+### I-065 · `sb()` initialization has no guard — cryptic silent crash if supabase/CONFIG not ready
+- **Priority:** 🟠 HIGH
+- **Area:** Client / `js/cp-api.js`
+- **Status:** ✅ RESOLVED
+- **Root cause:** `cp-api.js` is loaded as `type="module"` which defers execution, but `defer` scripts and ES modules do not guarantee strict execution order relative to each other across all browsers (particularly mobile Safari and older Chromium WebViews). If `sb()` was called before `window.supabase` or `CONFIG` was available, it threw `Cannot read properties of undefined` — a cryptic crash that silently killed the entire auth and upload pipeline with no user-visible error.
+- **Fix:** Added explicit guards in `sb()`: if `window.supabase` or `CONFIG` is not yet defined, a clear diagnostic error is thrown with an actionable message identifying which dependency is missing. Surfaces the root cause immediately in DevTools instead of a confusing downstream failure.
+
+---
+
+### I-066 · XHR upload timeout set to 120 s — double the Supabase Edge Function 60 s wall clock limit
+- **Priority:** 🟡 MEDIUM
+- **Area:** Client / `js/imagekit.js`
+- **Status:** ✅ RESOLVED
+- **Root cause:** `xhr.timeout` was set to 120,000 ms (2 minutes). Supabase Edge Functions hard-terminate after 60 seconds. The XHR `ontimeout` handler therefore never fires — instead the connection is reset by Supabase's infrastructure, which triggers `onerror` with "Network error — check your connection." Users saw a misleading connectivity error when the real issue was a slow upload exceeding the server's limit.
+- **Fix:** `xhr.timeout` reduced to 55,000 ms (55 seconds), which fires cleanly before Supabase cuts the wire. `ontimeout` now correctly surfaces "Upload timed out — your connection may be slow. Please try again."
+
+---
+
+### I-067 · `propId` persistence across page reloads — audit finding (already implemented)
+- **Priority:** 🟡 MEDIUM
+- **Area:** Client / `landlord/new-listing.html`
+- **Status:** ✅ RESOLVED (pre-existing — confirmed during audit)
+- **Notes:** During the Session 027 audit, `propId` lifecycle was reviewed. It is already correctly persisted to `localStorage('cp_draft_propid')` at generation time and restored at the top of `submitListing()` before any photo upload begins. Orphaned photos on retry are prevented. No code change required — documented here for completeness.
 
 ---
 

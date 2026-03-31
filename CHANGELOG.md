@@ -4,7 +4,32 @@ All notable changes to this project are documented here.
 Every task, fix, or update must add an entry. Most recent changes appear first.
 
 
-## [2026-03-31] — Session 026: Cloudflare Pages Deployment Setup & Build Fix
+## [2026-03-31] — Session 027: Photo Upload Deep Audit & Fix (I-062–I-067)
+
+**Session type:** Targeted bug fix — comprehensive audit of the entire photo upload pipeline. 6 issues found and resolved.
+
+### Root Cause
+Every photo upload was silently failing even with all environment variables correctly set. The primary cause was a data URI format mismatch: `imagekit.js` sends a full data URI (`data:image/jpeg;base64,...`) but ImageKit's upload API requires raw base64 only. The Edge Function was forwarding the prefixed value verbatim, causing ImageKit to reject or misinterpret every upload.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `supabase/functions/imagekit-upload/index.ts` | I-062: Strip `data:...;base64,` prefix before `formData.append('file', ...)` |
+| `js/imagekit.js` | I-063: Throw clear error when compression fails on file >4 MB (was silent body-cap failure) |
+| `js/imagekit.js` | I-066: `xhr.timeout` corrected from 120 s to 55 s (Supabase hard limit is 60 s) |
+| `js/cp-api.js` | I-064: `getAccessToken()` no longer signs user out on network failure — only on confirmed auth rejection |
+| `js/cp-api.js` | I-065: `sb()` now throws a clear diagnostic error if `window.supabase` or `CONFIG` not ready |
+| `ISSUES.md` | I-062 through I-067 documented and resolved |
+| `CHANGELOG.md` | This entry |
+| `SESSION.md` | Handoff document updated |
+
+### Issue Registry
+- **Resolved this session:** I-062, I-063, I-064, I-065, I-066, I-067
+- **Total resolved:** 67 | **Total tracked:** 69 | **Open:** 0
+
+
+
 
 **Session type:** Infrastructure — full Cloudflare Pages deployment pipeline configured end-to-end.
 

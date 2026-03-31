@@ -21,3 +21,7 @@ Thumbs.db
 # Replit system folders — environment-specific, not part of the project
 .cache/
 .local/
+.upm/
+
+# Uploaded assets (zip files, etc.) — never commit these
+attached_assets/

@@ -67,9 +67,19 @@ Deno.serve(async (req) => {
     }
     // ── End I-055 validation ──────────────────────────────────
 
+    // I-062: Strip the data URI prefix before sending to ImageKit.
+    // fileToBase64() in imagekit.js returns a full data URI:
+    //   "data:image/jpeg;base64,/9j/4AAQ..."
+    // ImageKit's upload API expects raw base64 only — the "data:...;base64," prefix
+    // causes ImageKit to treat the value as a URL to fetch (which fails) or reject
+    // the upload entirely. This was silently breaking every upload even with valid keys.
+    const base64Raw = typeof fileData === 'string' && fileData.includes(',')
+      ? fileData.split(',')[1]
+      : fileData;
+
     const credentials = btoa(`${IMAGEKIT_PRIVATE_KEY}:`);
     const formData = new FormData();
-    formData.append('file', fileData);
+    formData.append('file', base64Raw);
     formData.append('fileName', safeFileName);
     if (folder) formData.append('folder', folder);
 

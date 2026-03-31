@@ -1782,11 +1782,16 @@ ALTER TABLE rate_limit_log ENABLE ROW LEVEL SECURITY;
 -- If pg_cron is not available, rows accumulate but the index keeps queries fast;
 -- a manual periodic DELETE FROM rate_limit_log WHERE created_at < now() - interval '1 hour'
 -- can be run as an alternative.
-SELECT cron.schedule(
-  'rate-limit-cleanup',
-  '*/30 * * * *',
-  $$DELETE FROM rate_limit_log WHERE created_at < now() - interval '1 hour'$$
-) WHERE EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron');
+DO $outer$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    PERFORM cron.schedule(
+      'rate-limit-cleanup',
+      '*/30 * * * *',
+      'DELETE FROM rate_limit_log WHERE created_at < now() - interval ''1 hour'''
+    );
+  END IF;
+END $outer$;
 
 
 -- ============================================================

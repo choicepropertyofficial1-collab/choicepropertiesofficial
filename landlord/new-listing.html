@@ -1112,6 +1112,15 @@
       showing_instructions : v('showingInstructions') || null,
     };
 
+    // I-069: Validate array sync before insert — prevents index misalignment on deletion
+    if (photoUrls.length !== photoFileIds.length) {
+      CP.UI.toast('Internal error: photo data is corrupted. Please refresh and try again.', 'error');
+      console.error('INVARIANT VIOLATION: photo arrays out of sync', { photoUrls, photoFileIds });
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Listing';
+      return;
+    }
+
     const { error } = await CP.sb().from('properties').insert(listingData);
 
     if (error) {

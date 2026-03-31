@@ -350,18 +350,31 @@
       });
 
       // Upload avatar AFTER account is created — prevents orphaned files if signUp fails
+      // I-068: Avatar upload error handling — don't block signup if upload fails
       if (avatarFile.files[0] && supabase && result?.user) {
         const file = avatarFile.files[0];
         const ext  = file.name.split('.').pop();
         const path = `avatars/${result.user.id}.${ext}`;
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('profile-photos').upload(path, file, { cacheControl:'3600', upsert:false });
-        if (!uploadErr && uploadData) {
-          const { data: urlData } = supabase.storage.from('profile-photos').getPublicUrl(path);
-          const avatarUrl = urlData?.publicUrl || null;
-          if (avatarUrl) {
-            await supabase.from('landlords').update({ avatar_url: avatarUrl }).eq('user_id', result.user.id);
+        try {
+          const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from('profile-photos').upload(path, file, { cacheControl:'3600', upsert:false });
+          if (!uploadErr && uploadData) {
+            try {
+              const { data: urlData } = supabase.storage.from('profile-photos').getPublicUrl(path);
+              const avatarUrl = urlData?.publicUrl || null;
+              if (avatarUrl) {
+                await supabase.from('landlords').update({ avatar_url: avatarUrl }).eq('user_id', result.user.id);
+              }
+            } catch (e) {
+              console.warn('Avatar URL update failed:', e);
+            }
+          } else if (uploadErr) {
+            console.warn('Avatar upload failed:', uploadErr);
+            CP.UI.toast('Account created! Your profile photo couldn\'t be uploaded. You can add it later in Settings.', 'warning');
           }
+        } catch (avatarErr) {
+          console.error('Avatar upload encountered an error:', avatarErr);
+          CP.UI.toast('Account created! Your profile photo couldn\'t be uploaded. You can add it later in Settings.', 'warning');
         }
       }
 

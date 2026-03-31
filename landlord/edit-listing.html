@@ -761,6 +761,16 @@
         updated_at          : new Date().toISOString()
       })
       .eq('id', propertyId);
+    
+    // I-069: Validate array sync before update — prevents index misalignment on deletion
+    if (finalPhotoUrls.length !== finalPhotoFileIds.length) {
+      CP.UI.toast('Internal error: photo data is corrupted. Please refresh and try again.', 'error');
+      console.error('INVARIANT VIOLATION: photo arrays out of sync', { finalPhotoUrls, finalPhotoFileIds });
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+      return;
+    }
+    
     // Landlords: enforce row-level ownership in the query (belt-and-suspenders with RLS).
     // Admins: omit landlord_id filter — RLS 'properties_admin_all' policy handles access.
     if (!_isAdmin && profile) updateQuery = updateQuery.eq('landlord_id', profile.id);

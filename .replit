@@ -1,40 +1,40 @@
-modules = ["web", "nodejs-18"]
+# ============================================================
+# CHOICE PROPERTIES — REPLIT SAFETY CONFIGURATION
+# ============================================================
+# ⚠️  WARNING: This is a STATIC SITE project, NOT a Node.js server.
+# 
+# This project:
+#   ✅ Used ONLY for editing HTML, CSS, JavaScript files
+#   ✅ Deployed to Cloudflare Pages (not Replit server)
+#   ✅ Backend is Supabase (NOT local database)
+#   ✅ Does NOT require npm install, migrations, or auto-run
+#
+# If Replit tries to auto-run, migrate, or configure:
+#   → This is WRONG and will cause errors
+#   → DO NOT proceed
+#   → Close Replit and re-import from GitHub
+#
+# See: REPLIT_SAFETY.md for detailed instructions
+# ============================================================
+
+# Disable auto-run completely (CRITICAL)
+run = ""
+
+# Disable auto-deployment
+autoDeploy = false
+
+# Disable workflows/run button (CRITICAL)
+# This prevents Replit from auto-executing Node.js
+
 [nix]
 channel = "stable-25_05"
 
-[agent]
-expertMode = true
-integrations = ["javascript_database:1.0.0"]
-
-[workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node server.js"
-waitForPort = 5000
-
-[[ports]]
-localPort = 5000
-externalPort = 80
+# Minimal dependencies only (unzip for file handling)
+# ✅ NO Node.js, NO databases, NO ORMs, NO package managers
 
 [userenv]
+# Store secrets here for LOCAL editing only
+# These are NOT pushed to GitHub
 
 [userenv.shared]
 SUPABASE_URL = "https://cfsdhylbwzyuvcvbnrel.supabase.co"

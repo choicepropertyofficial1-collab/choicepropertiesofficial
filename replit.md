@@ -6,9 +6,13 @@
 
 **This file is loaded automatically into every Replit Agent session.**
 
-This project is a **pure static website**. It has no server, no local runtime, and no database in this repository.
+This project runs on **Replit** using `server.js` (Express) to serve static files and generate `config.js` from environment variables. The backend is **Supabase cloud** — no local database.
 
-### The ONLY valid workflow:
+### How it runs on Replit:
+```
+node server.js → serves static HTML/JS on port 5000 → Replit proxies to browser
+```
+### Deployment pipeline (separate from Replit):
 ```
 Edit files in Replit → Push to GitHub → Cloudflare Pages auto-deploys → Live site
 ```
@@ -17,16 +21,12 @@ Edit files in Replit → Push to GitHub → Cloudflare Pages auto-deploys → Li
 
 | Action | Why |
 |---|---|
-| `npm install` | Zero runtime dependencies exist. The `preinstall` hook will exit with an error. |
-| `npm start` or any server command | No server exists. The `start` script will exit with an error. |
-| Creating `config.js` | Generated at Cloudflare build time ONLY. Committing it leaks credentials and breaks deployment. It is gitignored. |
-| Using `DATABASE_URL`, `PGHOST`, `PGPASSWORD`, etc. | Replit injects these automatically. They are ghost variables. Ignore them completely. |
 | Installing any ORM (Drizzle, Prisma, Sequelize) | Backend is Supabase cloud. No local database. No migrations. |
-| Running `db:push`, `db:migrate` | Same reason. |
+| Running `db:push`, `db:migrate` | Same reason. Replit DB env vars (DATABASE_URL, PGHOST etc.) are unused ghost variables — ignore them. |
 | Running `wrangler` or any Cloudflare CLI | Deployment is automatic via GitHub push. |
 | Running `git push` or `git commit` | Owner handles all git operations. |
 | Modifying `generate-config.js`, `_headers`, `SETUP.sql`, `js/cp-api.js`, `js/apply*.js` | Protected files. Owner approval required. |
-| Configuring workflows, dev servers, or preview servers | This is a static site. Nothing runs locally. |
+| Committing `config.js` | Generated at runtime by server.js — gitignored. Never commit it. |
 
 ### You ARE allowed to:
 - Edit `.html`, `.css`, and `.js` files in the frontend

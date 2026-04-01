@@ -31,12 +31,36 @@ Deno.serve(async (req) => {
     const IMAGEKIT_PRIVATE_KEY  = Deno.env.get('IMAGEKIT_PRIVATE_KEY');
     const IMAGEKIT_URL_ENDPOINT = Deno.env.get('IMAGEKIT_URL_ENDPOINT');
 
+    // DEBUG: Log secret presence
+    console.log('[imagekit-upload] Secret check:', {
+      hasPrivateKey: !!IMAGEKIT_PRIVATE_KEY,
+      hasUrlEndpoint: !!IMAGEKIT_URL_ENDPOINT,
+      privateKeyLength: IMAGEKIT_PRIVATE_KEY?.length ?? 0,
+      urlEndpointLength: IMAGEKIT_URL_ENDPOINT?.length ?? 0,
+    });
+
     if (!IMAGEKIT_PRIVATE_KEY || !IMAGEKIT_URL_ENDPOINT) {
-      return jsonResponse({ success: false, error: 'ImageKit not configured' }, 500);
+      console.error('[imagekit-upload] Secrets missing or empty');
+      return jsonResponse({
+        success: false,
+        error: 'ImageKit not configured',
+        debug: {
+          hasPrivateKey: !!IMAGEKIT_PRIVATE_KEY,
+          hasUrlEndpoint: !!IMAGEKIT_URL_ENDPOINT,
+        },
+      }, 500);
     }
 
     const { fileData, fileName, folder } = await req.json();
+    console.log('[imagekit-upload] Request parsed:', {
+      hasFileData: !!fileData,
+      fileDataLength: typeof fileData === 'string' ? fileData.length : 'not-string',
+      hasFileName: !!fileName,
+      hasFolder: !!folder,
+    });
+
     if (!fileData || !fileName) {
+      console.error('[imagekit-upload] Missing fileData or fileName');
       return jsonResponse({ success: false, error: 'fileData and fileName required' }, 400);
     }
 
@@ -77,11 +101,28 @@ Deno.serve(async (req) => {
       ? fileData.split(',')[1]
       : fileData;
 
+    console.log('[imagekit-upload] Base64 processing:', {
+      hadPrefix: fileData.includes(','),
+      originalLength: fileData.length,
+      strippedLength: base64Raw.length,
+    });
+
+    // CRITICAL FIX: Decode base64 to binary before sending to ImageKit
+    // ImageKit API expects binary data in the 'file' field, not a base64 string
+    const binaryData = Uint8Array.from(atob(base64Raw), c => c.charCodeAt(0));
+
     const credentials = btoa(`${IMAGEKIT_PRIVATE_KEY}:`);
     const formData = new FormData();
-    formData.append('file', base64Raw);
-    formData.append('fileName', safeFileName);
+    formData.append('file', new Blob([binaryData], { type: 'image/jpeg' }), safeFileName);
     if (folder) formData.append('folder', folder);
+
+    console.log('[imagekit-upload] Sending to ImageKit:', {
+      endpoint: 'https://upload.imagekit.io/api/v1/files/upload',
+      fileName: safeFileName,
+      binaryDataSize: binaryData.length,
+      folder,
+      credentialsLength: credentials.length,
+    });
 
     const ikRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
       method: 'POST',
@@ -89,14 +130,25 @@ Deno.serve(async (req) => {
       body: formData,
     });
 
+    console.log('[imagekit-upload] ImageKit response:', {
+      status: ikRes.status,
+      ok: ikRes.ok,
+    });
+
     if (!ikRes.ok) {
       const errText = await ikRes.text().catch(() => `HTTP ${ikRes.status}`);
+      console.error('[imagekit-upload] ImageKit error:', errText);
       return jsonResponse({ success: false, error: `ImageKit error: ${errText}` }, 502);
     }
 
     const ikData = await ikRes.json();
+    console.log('[imagekit-upload] Upload successful');
     return jsonResponse({ success: true, url: ikData.url, fileId: ikData.fileId });
   } catch (err: any) {
+    console.error('[imagekit-upload] Exception caught:', {
+      message: err.message,
+      stack: err.stack,
+    });
     return jsonResponse({ success: false, error: err.message }, 500);
   }
 });

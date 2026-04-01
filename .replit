@@ -22,6 +22,7 @@ run = ""
 
 # Disable auto-deployment
 autoDeploy = false
+modules = ["nodejs-20"]
 
 # Disable workflows/run button (CRITICAL)
 # This prevents Replit from auto-executing Node.js
@@ -49,3 +50,34 @@ GEOAPIFY_API_KEY = "bea2afb13c904abea5cb2c2693541dcf"
 COMPANY_NAME = "Choice Properties"
 COMPANY_TAGLINE = "Your trust is our standard."
 ADMIN_EMAILS = "choicepropertygroup@hotmail.com"
+
+[agent]
+expertMode = true
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node server.js"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80

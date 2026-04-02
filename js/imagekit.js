@@ -103,7 +103,10 @@ export async function uploadToImageKit(file, options = {}) {
   let userToken = preToken;
   if (!userToken) {
     const session = await window.CP?.Auth?.getSession?.();
-    userToken = session?.access_token || anonKey;
+    userToken = session?.access_token ?? null;
+    if (!userToken) {
+      throw new Error('Session expired — please log in again to upload photos.');
+    }
   }
 
   // Validate file type client-side

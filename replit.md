@@ -37,6 +37,18 @@ Edit files in Replit → Push to GitHub → Cloudflare Pages auto-deploys → Li
 
 ---
 
+## CRITICAL — Supabase JWT Algorithm (ES256)
+
+This project was created after Supabase migrated to **ES256** (ECDSA) for signing user access tokens. **All edge functions MUST use `verify_jwt: false`** in their deployment config.
+
+**Why:** The Supabase edge gateway's `verify_jwt: true` mode uses the older HS256 algorithm to verify JWTs. New projects issue ES256-signed tokens — these are rejected with `"Invalid JWT"` at the gateway before the function code ever runs, making every authenticated function appear to have a "session expired" error.
+
+**How auth works instead:** Every authenticated function uses `requireAuth(req)` from `_shared/auth.ts`. This calls `supabase.auth.getUser(jwt)` internally, which sends the JWT to Supabase Auth directly. Supabase Auth always accepts its own tokens regardless of algorithm.
+
+**Rule:** Never deploy any edge function with `--verify-jwt` or `verify_jwt: true`. Always use `--no-verify-jwt`. The inner `requireAuth` / `requireAdmin` checks in each function handle security.
+
+---
+
 ## What This Project Is
 
 **Choice Properties** is a static property rental marketplace.

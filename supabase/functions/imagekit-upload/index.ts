@@ -114,6 +114,11 @@ Deno.serve(async (req) => {
     const credentials = btoa(`${IMAGEKIT_PRIVATE_KEY}:`);
     const formData = new FormData();
     formData.append('file', new Blob([binaryData], { type: 'image/jpeg' }), safeFileName);
+    // ImageKit upload API requires fileName as an explicit form field (not just the
+    // Blob's Content-Disposition filename). Without this, ImageKit returns HTTP 400
+    // "fileName is required" which the function was converting into a 502 error,
+    // causing "Photo storage service error" in the UI.
+    formData.append('fileName', safeFileName);
     if (folder) formData.append('folder', folder);
 
     console.log('[imagekit-upload] Sending to ImageKit:', {

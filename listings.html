@@ -473,36 +473,41 @@ async function fetchAndRender() {
   isLoading = true;
   showSkeletons();
 
-  const result = await CP.Properties.getListings({
-    q:         activeSearch,
-    type:      activeType,
-    beds:      activeBeds,
-    min_baths: activeMinBaths,
-    min_rent:  activeMinRent,
-    max_rent:  activeMaxRent,
-    sort:      sortBy,
-    page:      currentPage,
-    per_page:  PER_PAGE,
-  });
+  try {
+    const result = await CP.Properties.getListings({
+      q:         activeSearch,
+      type:      activeType,
+      beds:      activeBeds,
+      min_baths: activeMinBaths,
+      min_rent:  activeMinRent,
+      max_rent:  activeMaxRent,
+      sort:      sortBy,
+      page:      currentPage,
+      per_page:  PER_PAGE,
+    });
 
-  isLoading = false;
+    if (!result.ok) {
+      console.error('Failed to load listings:', result.error);
+      renderError();
+      return;
+    }
 
-  if (!result.ok) {
-    console.error('Failed to load listings:', result.error);
+    const { rows, total, total_pages } = result.data;
+    totalCount = total;
+    totalPages = total_pages;
+
+    const counter = document.getElementById('statListings');
+    if (counter) counter.textContent = total.toLocaleString();
+
+    renderProperties(rows);
+    renderPagination();
+    if (currentView === 'map') initMap(rows);
+  } catch (err) {
+    console.error('fetchAndRender error:', err);
     renderError();
-    return;
+  } finally {
+    isLoading = false;
   }
-
-  const { rows, total, total_pages } = result.data;
-  totalCount = total;
-  totalPages = total_pages;
-
-  const counter = document.getElementById('statListings');
-  if (counter) counter.textContent = total.toLocaleString();
-
-  renderProperties(rows);
-  renderPagination();
-  if (currentView === 'map') initMap(rows);
 }
 
 // ── Trigger search (resets to page 1) ─────────────────────────────────────
@@ -629,7 +634,6 @@ function renderPagination() {
 /* ─── Build card ─── */
 function buildCard(p) {
   const photos   = p.photo_urls?.length ? p.photo_urls : ['/assets/placeholder-property.jpg'];
-  const avail    = p.available_date ? formatAvail(p.available_date) : 'Available Now';
   const availNow = !p.available_date || new Date(p.available_date) <= new Date();
   const applyURL = CP.buildApplyURL(p);
   const imgSizes = '(max-width: 539px) calc(100vw - 32px), (max-width: 899px) calc(50vw - 28px), (max-width: 1319px) calc(33vw - 32px), calc(25vw - 32px)';
@@ -897,6 +901,57 @@ function updateFilterBadge() {
   const count = [activeType && activeType !== 'all', !!activeBeds, !!activeMaxRent, !!activeMinRent, !!activeMinBaths, !!activeSearch].filter(Boolean).length;
   if (count > 0) { badge.textContent = count; badge.style.display = 'inline-flex'; }
   else badge.style.display = 'none';
+}
+
+/* ─── Utilities ─── */
+
+function setupScrollTop() {
+  const btn = document.getElementById('scrollTopBtn');
+  if (!btn) return;
+  window.addEventListener('scroll', () => btn.classList.toggle('visible', window.scrollY > 400), { passive: true });
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
+function renderError() {
+  const grid = document.getElementById('propertyGrid');
+  if (!grid) return;
+  grid.innerHTML = `
+    <div class="empty-state" style="grid-column:1/-1;text-align:center;padding:var(--s-16) var(--s-6)">
+      <div class="empty-state-icon"><i class="fas fa-exclamation-circle" style="font-size:40px;color:var(--color-text-muted)"></i></div>
+      <h3 style="margin:var(--s-4) 0 var(--s-2)">Failed to load listings</h3>
+      <p style="color:var(--color-text-secondary)">Please check your connection and <button onclick="location.reload()" style="background:none;border:none;color:var(--color-brand);cursor:pointer;font-size:inherit;padding:0;text-decoration:underline">try again</button></p>
+    </div>`;
+}
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  if (!c) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icons = { success: 'check-circle', error: 'exclamation-circle', info: 'info-circle' };
+  t.innerHTML = `<i class="fas fa-${icons[type] || 'info-circle'}"></i> ${msg}`;
+  c.appendChild(t);
+  const duration = type === 'error' ? 5000 : 3200;
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(6px) scale(0.97)';
+    t.style.transition = 'all 280ms';
+    setTimeout(() => t.remove(), 280);
+  }, duration);
+}
+
+function toggleSave(id, btn) {
+  if (savedIds.has(id)) {
+    savedIds.delete(id);
+    btn.classList.remove('saved');
+    btn.innerHTML = '<i class="far fa-heart"></i>';
+  } else {
+    savedIds.add(id);
+    btn.classList.add('saved');
+    btn.innerHTML = '<i class="fas fa-heart"></i>';
+    showToast('Property saved!', 'success');
+  }
+  localStorage.setItem('cp_saved', JSON.stringify([...savedIds]));
 }
 
 /* ─── Mobile Drawer ─── */

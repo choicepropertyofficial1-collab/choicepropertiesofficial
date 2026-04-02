@@ -6,18 +6,16 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="preconnect" id="sb-preconnect"><!-- set by config.js -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Edit your rental property listing on Choice Properties.">
   <meta name="robots" content="noindex, nofollow">
   <title>Edit Listing — Choice Properties</title>
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/main.css?v=1775137055043">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/main.css?v=1775137055043">
   <link rel="stylesheet" href="/css/landlord.css?v=1775137055043">
   <link rel="stylesheet" href="/css/admin.css?v=1775137055043">
   <link rel="stylesheet" href="/css/mobile.css?v=1775137055043">
@@ -173,6 +171,15 @@
 <script type="module" nonce="Lchkcpgq7g1Z6hLi5iJlyg==">
   import { requireAuth, getLandlordProfile, signOut, supabase } from '../js/cp-api.js';
   import { uploadMultipleToImageKit, deleteFromImageKit } from '../js/imagekit.js';
+
+  // CSP-safe image error handling (inline onerror blocked by Cloudflare CSP nonce policy)
+  document.addEventListener('error', function(e) {
+    var t = e.target;
+    if (t.tagName !== 'IMG') return;
+    if (t.src !== location.origin + '/assets/placeholder-property.jpg') {
+      t.src = '/assets/placeholder-property.jpg';
+    }
+  }, true);
 
   const _params    = new URLSearchParams(window.location.search);
   const _isAdmin   = _params.get('admin') === '1';
@@ -489,7 +496,7 @@
     }
     grid.innerHTML = currentPhotoUrls.map((url, i) => `
       <div class="existing-photo-item ${i === 0 ? 'is-cover' : ''}" id="epItem-${i}">
-        <img src="${url}" alt="Photo ${i+1}" onerror="this.src='/assets/placeholder-property.jpg'" loading="lazy">
+        <img src="${url}" alt="Photo ${i+1}" loading="lazy">
         ${i === 0 ? '<div class="cover-label">Cover</div>' : ''}
         <div class="photo-action-bar">
           ${i !== 0 ? `<button class="photo-action-btn cover-btn" title="Set as cover" onclick="setCover(${i})"><i class="fas fa-star"></i></button>` : ''}

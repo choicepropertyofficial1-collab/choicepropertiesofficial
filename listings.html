@@ -19,13 +19,11 @@
   <meta name="twitter:image" content="/assets/og-cover.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
-  <link rel="stylesheet" href="/css/main.css?v=1775137055043">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="/css/main.css?v=1775137055043">
   <link rel="stylesheet" href="/css/listings.css?v=1775137055043">
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-  <!-- Leaflet loaded lazily when user switches to Map View -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet loaded lazily when user switches to Map View -->
   <link rel="stylesheet" href="/css/mobile.css?v=1775137055043">
   <style>
     /* ── CRITICAL CSS — above-fold paint for listings.html ───────────────────
@@ -380,6 +378,19 @@
 <script type="module" nonce="Lchkcpgq7g1Z6hLi5iJlyg==">
 const esc = window.CP_esc || (s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'));
 
+// CSP-safe image load/error handling (inline onload/onerror blocked by Cloudflare CSP nonce policy)
+document.addEventListener('load', function(e) {
+  if (e.target.tagName === 'IMG') e.target.classList.add('cp-img-loaded');
+}, true);
+document.addEventListener('error', function(e) {
+  var t = e.target;
+  if (t.tagName !== 'IMG') return;
+  t.classList.add('cp-img-loaded');
+  if (t.src !== location.origin + '/assets/placeholder-property.jpg') {
+    t.src = '/assets/placeholder-property.jpg';
+  }
+}, true);
+
 // ── State ────────────────────────────────────────────────────────────────
 let activeType     = 'all';
 let activeBeds     = '';
@@ -641,7 +652,7 @@ function buildCard(p) {
   const slidesHtml = photos.map((url, i) => {
     const lqip = CP.UI.lqipUrl(url);
     const lqipStyle = lqip ? ` style="background-image:url('${lqip}');background-size:cover;background-position:center"` : '';
-    return `<div class="property-card-slide"${lqipStyle}><img src="${CONFIG.img(url,'card')}" srcset="${CONFIG.srcset(url,'card','card_2x')}" alt="${p.title} photo ${i+1}" sizes="${imgSizes}" loading="${i===0?'eager':'lazy'}" ${i===0?'fetchpriority="high"':''} decoding="async" onload="this.classList.add('cp-img-loaded')" onerror="this.classList.add('cp-img-loaded');this.src='/assets/placeholder-property.jpg'"></div>`;
+    return `<div class="property-card-slide"${lqipStyle}><img src="${CONFIG.img(url,'card')}" srcset="${CONFIG.srcset(url,'card','card_2x')}" alt="${p.title} photo ${i+1}" sizes="${imgSizes}" loading="${i===0?'eager':'lazy'}" ${i===0?'fetchpriority="high"':''} decoding="async"></div>`;
   }).join('');
 
   const tags = [];
@@ -794,7 +805,7 @@ function initMap(props) {
     const marker = L.marker([lat, lng], { icon }).addTo(mapInstance);
     marker.bindPopup(`
       <a href="/property.html?id=${p.id}" class="map-popup-card">
-        <img class="map-popup-img" src="${CONFIG.img(p.photo_urls?.[0] || '','card')}" alt="${p.title}" onerror="this.src='/assets/placeholder-property.jpg'" loading="lazy">
+        <img class="map-popup-img" src="${CONFIG.img(p.photo_urls?.[0] || '','card')}" alt="${p.title}" loading="lazy">
         <div class="map-popup-body">
           <div class="map-popup-price">$${p.monthly_rent.toLocaleString()}<span>/mo</span></div>
           <div class="map-popup-title">${p.title}</div>

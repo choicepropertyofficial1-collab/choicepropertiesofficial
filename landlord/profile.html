@@ -8,9 +8,8 @@
   <title>Landlord Profile — Choice Properties</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
-  <meta name="description" id="metaDesc" content="Landlord Profile — Choice Properties Nationwide">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <meta name="description" id="metaDesc" content="Landlord Profile — Choice Properties Nationwide">
   <!-- Open Graph -->
   <meta property="og:type"        content="profile">
   <meta property="og:site_name"   content="Choice Properties">
@@ -23,9 +22,8 @@
   <meta name="twitter:description" id="twDescription" content="View rental listings on Choice Properties.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/main.css?v=1775137055043">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/main.css?v=1775137055043">
   <link rel="stylesheet" href="/css/landlord.css?v=1775137055043">
   <link rel="stylesheet" href="/css/listings.css?v=1775137055043">
   <link rel="stylesheet" href="/css/admin.css?v=1775137055043">
@@ -511,6 +509,15 @@
   import { supabase } from '../js/cp-api.js';
   import { buildApplyURL } from '../js/cp-api.js';
 
+  // CSP-safe image error handling (inline onerror blocked by Cloudflare CSP nonce policy)
+  document.addEventListener('error', function(e) {
+    var t = e.target;
+    if (t.tagName !== 'IMG') return;
+    if (t.src !== location.origin + '/assets/placeholder-property.jpg') {
+      t.src = '/assets/placeholder-property.jpg';
+    }
+  }, true);
+
   // Sign out wiring
   async function doSignOut() {
     await supabase.auth.signOut();
@@ -721,7 +728,7 @@
         <article class="property-card">
           <a href="/property.html?id=${p.id}" class="property-card-img-link">
             <div class="property-card-img">
-              <img src="${photo}" alt="${p.title}" loading="lazy" onerror="this.src='/assets/placeholder-property.jpg'">
+              <img src="${photo}" alt="${p.title}" loading="lazy">
               <div class="property-card-badge">
                 <span class="badge badge-amber">${capitalize(p.property_type || 'Property')}</span>
               </div>

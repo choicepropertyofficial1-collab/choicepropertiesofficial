@@ -8,6 +8,12 @@
 
 This project runs on **Replit** using `server.js` (Express) to serve static files and generate `config.js` from environment variables. The backend is **Supabase cloud** — no local database.
 
+### Replit Environment Setup (Migration Complete)
+- Workflow: `Start application` → runs `node server.js` on port 5000
+- All env vars set via Replit Secrets panel (SUPABASE_URL, SUPABASE_ANON_KEY, IMAGEKIT_URL, etc.)
+- **No Drizzle, no local DB, no migrations** — backend is Supabase cloud only
+- The `DATABASE_URL` / `PG*` env vars from Replit's provisioned DB are unused — ignore them
+
 ### How it runs on Replit:
 ```
 node server.js → serves static HTML/JS on port 5000 → Replit proxies to browser

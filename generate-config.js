@@ -178,6 +178,7 @@ CONFIG.img = function(url, preset) {
   }
   const transforms = {
     card:       'tr:w-600,q-80,f-webp',
+    card_2x:    'tr:w-1200,q-80,f-webp',
     gallery:    'tr:w-1200,q-90,f-webp',
     gallery_2x: 'tr:w-2400,q-85,f-webp',
     strip:      'tr:w-80,h-60,c-maintain_ratio,q-70,f-webp',
@@ -194,6 +195,14 @@ CONFIG.img = function(url, preset) {
   }
   // External URLs (Zillow CDN, S3, etc.) — serve directly, never proxy through ImageKit
   return url;
+};
+
+CONFIG.srcset = function(url, preset1x, preset2x) {
+  const u1 = CONFIG.img(url, preset1x);
+  const u2 = CONFIG.img(url, preset2x);
+  if (!u1) return '';
+  if (!u2 || u2 === u1) return u1;
+  return u1 + ' 1x, ' + u2 + ' 2x';
 };
 
 Object.freeze(CONFIG);

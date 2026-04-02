@@ -1,51 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- TODO: Replace YOUR-DOMAIN.com with your real domain after deployment -->
+<!-- TODO: Replace choicepropertiesofficial.pages.dev with your real domain after deployment -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
   <url>
-    <loc>https://YOUR-DOMAIN.com/</loc>
+    <loc>https://choicepropertiesofficial.pages.dev/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://YOUR-DOMAIN.com/listings.html</loc>
+    <loc>https://choicepropertiesofficial.pages.dev/listings.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
 
   <url>
-    <loc>https://YOUR-DOMAIN.com/about.html</loc>
+    <loc>https://choicepropertiesofficial.pages.dev/about.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://YOUR-DOMAIN.com/how-it-works.html</loc>
+    <loc>https://choicepropertiesofficial.pages.dev/how-it-works.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://YOUR-DOMAIN.com/how-to-apply.html</loc>
+    <loc>https://choicepropertiesofficial.pages.dev/how-to-apply.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://YOUR-DOMAIN.com/faq.html</loc>
+    <loc>https://choicepropertiesofficial.pages.dev/faq.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://YOUR-DOMAIN.com/privacy.html</loc>
+    <loc>https://choicepropertiesofficial.pages.dev/privacy.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
 
   <url>
-    <loc>https://YOUR-DOMAIN.com/terms.html</loc>
+    <loc>https://choicepropertiesofficial.pages.dev/terms.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
